@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateListInput } from './dto/create-list.input';
-import { UpdateListInput } from './dto/update-list.input';
 
 import { List } from './entities/list.entity';
 
@@ -26,13 +25,5 @@ export class ListsService {
 		if (!list) throw new BadRequestException(`No list with id ${id} found`);
 
 		return list;
-	}
-
-	update(id: number, updateListInput: UpdateListInput) {
-		return `This action updates a #${id} list`;
-	}
-
-	remove(id: number) {
-		return `This action removes a #${id} list`;
 	}
 }
