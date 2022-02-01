@@ -22,7 +22,7 @@ describe('ListsService', () => {
 			expect(service.findAll()).toEqual([
 				{
 					id: 1,
-					title: 'Hello GraphQL',
+					title: 'List One',
 				},
 			]);
 		});
@@ -32,7 +32,7 @@ describe('ListsService', () => {
 		it('should successfully return a cat', () => {
 			expect(service.findOne(1)).toEqual({
 				id: 1,
-				title: 'Hello GraphQL',
+				title: 'List One',
 			});
 		});
 
@@ -40,15 +40,15 @@ describe('ListsService', () => {
 			const noIdCall = () => service.findOne(0);
 
 			expect(noIdCall).toThrowError(BadRequestException);
-			expect(noIdCall).toThrowError('No list with id 0 not found');
+			expect(noIdCall).toThrowError('No list with id 0 found');
 		});
 	});
 
 	describe('new list', () => {
 		it('should a list to the arry', () => {
-			expect(service.create({ title: 'List One' })).toEqual({
+			expect(service.create({ title: 'New List One' })).toEqual({
 				id: 2,
-				title: 'List One',
+				title: 'New List One',
 			});
 		});
 	});

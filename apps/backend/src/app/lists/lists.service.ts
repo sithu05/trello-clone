@@ -6,7 +6,7 @@ import { List } from './entities/list.entity';
 
 @Injectable()
 export class ListsService {
-	private lists: List[] = [{ id: 1, title: 'Hello GraphQL' }];
+	private lists: List[] = [{ id: 1, title: 'List One' }];
 
 	create(createListInput: CreateListInput) {
 		const id = this.lists.length + 1;
@@ -23,8 +23,7 @@ export class ListsService {
 	findOne(id: number) {
 		const list = this.lists.find((item) => item.id === id);
 
-		if (!list)
-			throw new BadRequestException(`No list with id ${id} not found`);
+		if (!list) throw new BadRequestException(`No list with id ${id} found`);
 
 		return list;
 	}
