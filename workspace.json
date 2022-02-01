@@ -1,6 +1,7 @@
 {
-  "version": 2,
-  "projects": {
-    "backend": "apps/backend"
-  }
+	"version": 2,
+	"projects": {
+		"backend": "apps/backend",
+		"lists": "libs/lists"
+	}
 }
