@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { ListsService } from '@trello-clone/lists';
 import * as request from 'supertest';
 
 import { AppModule } from '../app/app.module';
@@ -10,6 +11,7 @@ const lists = [{ id: 1, title: 'List One' }];
 
 describe('GraphQL ListsResolver (e2e)', () => {
 	let app: INestApplication;
+	let listsService: ListsService;
 
 	beforeAll(async () => {
 		const moduleRef = await Test.createTestingModule({
@@ -17,6 +19,7 @@ describe('GraphQL ListsResolver (e2e)', () => {
 		}).compile();
 
 		app = moduleRef.createNestApplication();
+		listsService = moduleRef.get<ListsService>(ListsService);
 
 		await app.init();
 	});
@@ -26,70 +29,76 @@ describe('GraphQL ListsResolver (e2e)', () => {
 	});
 
 	describe('Lists Module', () => {
-		describe('lists', () => {
-			it('should get the lists array', () => {
-				return request(app.getHttpServer())
-					.post(gql)
-					.send({ query: '{ lists { id title }}' })
-					.expect(200)
-					.expect((res) => {
-						expect(res.body.data.lists).toEqual(lists);
-					});
-			});
+		// clear the data before tests
+		beforeEach(async () => {
+			const lists = await request(app.getHttpServer())
+				.post(gql)
+				.send({ query: '{ lists { id title }}' })
+				.expect(200);
+
+			await Promise.all(
+				lists.body.data.lists.map(async (list) => {
+					return listsService.deleteOne(list.id);
+				})
+			);
 		});
 
-		describe('get list by Id', () => {
-			it('should get a list', () => {
-				const ID = 1;
-				const result = lists.find((item) => item.id === ID);
+		it('create list, get all lists, get by id', async () => {
+			const title = 'New List From Test';
 
-				return request(app.getHttpServer())
-					.post(gql)
-					.send({ query: `{ list (id: ${ID}) { id title }}` })
-					.expect(200)
-					.expect((res) => {
-						expect(res.body.data.list).toEqual(result);
-					});
-			});
-
-			it('should get an error for bad id', () => {
-				const ID = 400;
-
-				return request(app.getHttpServer())
-					.post(gql)
-					.send({ query: `{ list (id: ${ID}) { id title }}` })
-					.expect(200)
-					.expect((res) => {
-						expect(res.body.data).toBe(null);
-						expect(res.body.errors[0].message).toBe(
-							`No list with id ${ID} found`
-						);
-					});
-			});
-		});
-
-		describe('should create a new list', () => {
-			it('create a new list', () => {
-				const title = 'New List One';
-
-				return request(app.getHttpServer())
-					.post(gql)
-					.send({
-						query: `mutation {
+			const created = await request(app.getHttpServer())
+				.post(gql)
+				.send({
+					query: `mutation {
 							createList(createListInput: { title: "${title}" }) {
 								id
 								title
 							}
 						}`,
-					})
-					.expect(200)
-					.expect((res) => {
-						expect(res.body.data.createList).toEqual({
-							id: 2,
-							title: title,
-						});
-					});
+				})
+				.expect(200);
+
+			expect(created.body.data.createList).toEqual({
+				title,
+				id: expect.any(Number),
 			});
+
+			// ------------------ Create List ------------------------
+
+			const lists = await request(app.getHttpServer())
+				.post(gql)
+				.send({ query: '{ lists { id title }}' })
+				.expect(200);
+
+			expect(lists.body.data.lists).toEqual(expect.any(Array));
+			expect(lists.body.data.lists.length).toBe(1);
+			expect(lists.body.data.lists[0]).toEqual({
+				...created.body.data.createList,
+				id: expect.any(Number),
+			});
+
+			// ------------------ Get All Lists ------------------------
+
+			const detail = await request(app.getHttpServer())
+				.post(gql)
+				.send({
+					query: `{ list (id: ${created.body.data.createList.id}) { id title }}`,
+				})
+				.expect(200);
+
+			expect(detail.body.data.list).toEqual(created.body.data.createList);
+
+			const notFound = await request(app.getHttpServer())
+				.post(gql)
+				.send({
+					query: `{ list (id: 2) { id title }}`,
+				})
+				.expect(200);
+
+			expect(notFound.body.data).toBe(null);
+			expect(notFound.body.errors[0].message).toBe(`List not found (2)`);
+
+			// ------------------ Get List By ID ------------------------
 		});
 	});
 });

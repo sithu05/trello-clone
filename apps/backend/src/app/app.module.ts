@@ -13,7 +13,7 @@ import { AppService } from './app.service';
 		MikroOrmModule.forRoot({
 			type: 'mysql',
 			dbName: 'trello-clone',
-			debug: true,
+			debug: false,
 			autoLoadEntities: true,
 			user: 'root',
 			password: 'mypassword',
