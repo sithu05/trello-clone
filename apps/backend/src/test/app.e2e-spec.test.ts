@@ -7,8 +7,6 @@ import { AppModule } from '../app/app.module';
 
 const gql = '/graphql';
 
-const lists = [{ id: 1, title: 'List One' }];
-
 describe('GraphQL ListsResolver (e2e)', () => {
 	let app: INestApplication;
 	let listsService: ListsService;
