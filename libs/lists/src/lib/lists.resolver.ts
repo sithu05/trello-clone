@@ -1,10 +1,18 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import {
+	Resolver,
+	Query,
+	Mutation,
+	Args,
+	Int,
+	ResolveField,
+} from '@nestjs/graphql';
 
 import { ListsService } from './lists.service';
 
 import { List } from './entities/list.entity';
 
 import { CreateListInput } from './dto/create-list.input';
+import { Task } from '@trello-clone/tasks';
 
 @Resolver(() => List)
 export class ListsResolver {
@@ -23,5 +31,10 @@ export class ListsResolver {
 	@Query(() => List, { name: 'list' })
 	findOne(@Args('id', { type: () => Int }) id: number) {
 		return this.listsService.findOne(id);
+	}
+
+	@ResolveField('tasks', () => [Task])
+	tasks() {
+		return [];
 	}
 }

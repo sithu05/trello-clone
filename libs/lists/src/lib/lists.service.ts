@@ -1,16 +1,12 @@
-import { EntityRepository } from '@mikro-orm/core';
-import { InjectRepository } from '@mikro-orm/nestjs';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateListInput } from './dto/create-list.input';
 
 import { List } from './entities/list.entity';
+import { ListRepository } from './list.repository';
 
 @Injectable()
 export class ListsService {
-	constructor(
-		@InjectRepository(List)
-		private readonly listRepository: EntityRepository<List>
-	) {}
+	constructor(private readonly listRepository: ListRepository) {}
 
 	async create(createListInput: CreateListInput) {
 		const list = new List(createListInput.title);

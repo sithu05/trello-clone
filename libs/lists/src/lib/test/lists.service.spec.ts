@@ -1,34 +1,40 @@
-import { EntityRepository, NotFoundError } from '@mikro-orm/core';
-import { getRepositoryToken } from '@mikro-orm/nestjs';
+import { NotFoundError } from '@mikro-orm/core';
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { List } from './entities/list.entity';
-import { ListsService } from './lists.service';
+import { List } from '../entities/list.entity';
+
+import { ListRepository } from '../list.repository';
+import { ListsService } from '../lists.service';
 
 const Lists = [new List('List One'), new List('List Two')];
 const SingleList = new List('List Detail');
 
 describe('ListsService', () => {
 	let service: ListsService;
-	let repo: EntityRepository<List>;
+	let repo: ListRepository;
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
 			providers: [
 				ListsService,
 				{
-					provide: getRepositoryToken(List),
+					provide: ListRepository,
 					useValue: {
 						findAll: jest.fn().mockResolvedValue(Lists),
 						findOneOrFail: jest.fn().mockResolvedValue(SingleList),
+						persistAndFlush: jest
+							.fn()
+							.mockImplementation((payload) =>
+								Promise.resolve({ ...payload })
+							),
 					},
 				},
 			],
 		}).compile();
 
 		service = module.get<ListsService>(ListsService);
-		repo = module.get<EntityRepository<List>>(getRepositoryToken(List));
+		repo = module.get<ListRepository>(ListRepository);
 	});
 
 	it('should be defined', () => {
@@ -68,15 +74,12 @@ describe('ListsService', () => {
 	});
 
 	describe('new list', () => {
-		it('should a list to the arry', () => {
-			const serviceSpy = jest
-				.spyOn(service, 'create')
-				.mockResolvedValue(SingleList);
-
-			expect(
+		it('should a list to the arry', async () => {
+			await expect(
 				service.create({ title: SingleList.title })
-			).resolves.toEqual(SingleList);
-			expect(serviceSpy).toBeCalledWith({ title: SingleList.title });
+			).resolves.toEqual({
+				title: SingleList.title,
+			});
 		});
 	});
 

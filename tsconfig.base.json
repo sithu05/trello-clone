@@ -15,7 +15,8 @@
 		"skipDefaultLibCheck": true,
 		"baseUrl": ".",
 		"paths": {
-			"@trello-clone/lists": ["libs/lists/src/index.ts"]
+			"@trello-clone/lists": ["libs/lists/src/index.ts"],
+			"@trello-clone/tasks": ["libs/tasks/src/index.ts"]
 		}
 	},
 	"exclude": ["node_modules", "tmp"]

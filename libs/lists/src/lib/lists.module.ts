@@ -7,7 +7,7 @@ import { ListsResolver } from './lists.resolver';
 import { List } from './entities/list.entity';
 
 @Module({
-	imports: [MikroOrmModule.forFeature([List])],
+	imports: [MikroOrmModule.forFeature({ entities: [List] })],
 	providers: [ListsResolver, ListsService],
 	exports: [ListsService],
 })
