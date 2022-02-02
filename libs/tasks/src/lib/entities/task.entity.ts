@@ -11,7 +11,7 @@ import { List } from '@trello-clone/lists';
 import { TaskRepository } from '../task.repository';
 
 @Entity({ customRepository: () => TaskRepository })
-// @ObjectType()
+@ObjectType()
 export class Task {
 	[EntityRepositoryType]?: TaskRepository;
 
@@ -31,6 +31,7 @@ export class Task {
 	@Field(() => Int)
 	sorter: number;
 
+	@Field(() => List)
 	@ManyToOne(() => List)
 	list: List;
 

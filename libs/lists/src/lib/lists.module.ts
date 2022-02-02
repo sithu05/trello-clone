@@ -5,9 +5,10 @@ import { ListsService } from './lists.service';
 import { ListsResolver } from './lists.resolver';
 
 import { List } from './entities/list.entity';
+import { TasksModule } from '@trello-clone/tasks';
 
 @Module({
-	imports: [MikroOrmModule.forFeature({ entities: [List] })],
+	imports: [TasksModule, MikroOrmModule.forFeature({ entities: [List] })],
 	providers: [ListsResolver, ListsService],
 	exports: [ListsService],
 })
