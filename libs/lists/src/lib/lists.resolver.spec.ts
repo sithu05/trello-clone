@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateListInput } from './dto/create-list.input';
+import { List } from './entities/list.entity';
 import { ListsResolver } from './lists.resolver';
 import { ListsService } from './lists.service';
 
-const lists = [
-	{ id: 1, title: 'List One' },
-	{ id: 2, title: 'List Two' },
-];
+const Lists = [new List('List One'), new List('List Two')];
+const SingleList = new List('Single List');
 
 describe('ListsResolver', () => {
 	let resolver: ListsResolver;
@@ -17,18 +16,15 @@ describe('ListsResolver', () => {
 				ListsResolver,
 				{
 					provide: ListsService,
-					useFactory: () => ({
-						findAll: jest.fn().mockReturnValue(lists),
-						findOne: jest.fn().mockImplementation((id: number) => {
-							return lists.find((item) => item.id === id);
-						}),
+					useValue: {
+						findAll: jest.fn().mockResolvedValue(Lists),
+						findOne: jest.fn().mockResolvedValue(SingleList),
 						create: jest
 							.fn()
-							.mockImplementation((input: CreateListInput) => ({
-								id: 10,
-								title: input.title,
-							})),
-					}),
+							.mockImplementation((input: CreateListInput) =>
+								Promise.resolve(new List(input.title))
+							),
+					},
 				},
 			],
 		}).compile();
@@ -42,24 +38,27 @@ describe('ListsResolver', () => {
 
 	describe('get lists', () => {
 		it('should get the lists array', () => {
-			expect(resolver.findAll()).toEqual(lists);
+			expect(resolver.findAll()).resolves.toEqual(Lists);
 		});
 	});
 
 	describe('get list', () => {
 		it('should get list by id', () => {
-			const result = lists.find((item) => item.id === 1);
+			const resolverSpy = jest.spyOn(resolver, 'findOne');
 
-			expect(resolver.findOne(1)).toEqual(result);
+			expect(resolver.findOne(1)).resolves.toEqual(SingleList);
+			expect(resolverSpy).toBeCalledWith(1);
 		});
 	});
 
 	describe('add list', () => {
 		it('should create a new list', () => {
-			expect(resolver.createList({ title: 'New List' })).toEqual({
-				id: 10,
-				title: 'New List',
-			});
+			const resolverSpy = jest.spyOn(resolver, 'createList');
+
+			expect(resolver.createList({ title: 'New List' })).resolves.toEqual(
+				new List('New List')
+			);
+			expect(resolverSpy).toBeCalledWith({ title: 'New List' });
 		});
 	});
 });

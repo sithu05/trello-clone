@@ -1,3 +1,5 @@
+import { EntityRepository } from '@mikro-orm/core';
+import { InjectRepository } from '@mikro-orm/nestjs';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateListInput } from './dto/create-list.input';
 
@@ -5,25 +7,28 @@ import { List } from './entities/list.entity';
 
 @Injectable()
 export class ListsService {
-	private lists: List[] = [{ id: 1, title: 'List One' }];
+	constructor(
+		@InjectRepository(List)
+		private readonly listRepository: EntityRepository<List>
+	) {}
 
-	create(createListInput: CreateListInput) {
-		const id = this.lists.length + 1;
+	async create(createListInput: CreateListInput) {
+		const list = new List(createListInput.title);
 
-		this.lists.push({ id: id, title: createListInput.title });
+		await this.listRepository.persistAndFlush(list);
 
-		return this.findOne(id);
+		return list;
 	}
 
 	findAll() {
-		return this.lists;
+		return this.listRepository.findAll();
 	}
 
-	findOne(id: number) {
-		const list = this.lists.find((item) => item.id === id);
-
-		if (!list) throw new BadRequestException(`No list with id ${id} found`);
-
-		return list;
+	async findOne(id: number) {
+		try {
+			return await this.listRepository.findOneOrFail(id);
+		} catch (err) {
+			throw new BadRequestException(err);
+		}
 	}
 }

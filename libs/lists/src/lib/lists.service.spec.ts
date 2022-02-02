@@ -1,16 +1,34 @@
+import { EntityRepository, NotFoundError } from '@mikro-orm/core';
+import { getRepositoryToken } from '@mikro-orm/nestjs';
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { List } from './entities/list.entity';
 import { ListsService } from './lists.service';
+
+const Lists = [new List('List One'), new List('List Two')];
+const SingleList = new List('List Detail');
 
 describe('ListsService', () => {
 	let service: ListsService;
+	let repo: EntityRepository<List>;
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
-			providers: [ListsService],
+			providers: [
+				ListsService,
+				{
+					provide: getRepositoryToken(List),
+					useValue: {
+						findAll: jest.fn().mockResolvedValue(Lists),
+						findOneOrFail: jest.fn().mockResolvedValue(SingleList),
+					},
+				},
+			],
 		}).compile();
 
 		service = module.get<ListsService>(ListsService);
+		repo = module.get<EntityRepository<List>>(getRepositoryToken(List));
 	});
 
 	it('should be defined', () => {
@@ -18,38 +36,47 @@ describe('ListsService', () => {
 	});
 
 	describe('get lists', () => {
-		it('should return a array of lists', () => {
-			expect(service.findAll()).toEqual([
-				{
-					id: 1,
-					title: 'List One',
-				},
-			]);
+		it('should return a array of lists', async () => {
+			const lists = await service.findAll();
+
+			expect(lists).toEqual(Lists);
 		});
 	});
 
 	describe('get list by id', () => {
-		it('should successfully return a cat', () => {
-			expect(service.findOne(1)).toEqual({
-				id: 1,
-				title: 'List One',
-			});
+		it('should successfully return a cat', async () => {
+			const repoSpy = jest.spyOn(repo, 'findOneOrFail');
+
+			expect(service.findOne(1)).resolves.toEqual(SingleList);
+			expect(repoSpy).toBeCalledWith(1);
 		});
 
-		it('should throw an error', () => {
-			const noIdCall = () => service.findOne(0);
+		it('should get an error for unknown id', async () => {
+			const ID = 3;
 
-			expect(noIdCall).toThrowError(BadRequestException);
-			expect(noIdCall).toThrowError('No list with id 0 found');
+			const repoSpy = jest
+				.spyOn(repo, 'findOneOrFail')
+				.mockRejectedValueOnce(
+					new NotFoundError(`List not found (${3})`)
+				);
+
+			await expect(service.findOne(ID)).rejects.toThrowError(
+				new BadRequestException(`List not found (${3})`)
+			);
+			expect(repoSpy).toBeCalledWith(ID);
 		});
 	});
 
 	describe('new list', () => {
 		it('should a list to the arry', () => {
-			expect(service.create({ title: 'New List One' })).toEqual({
-				id: 2,
-				title: 'New List One',
-			});
+			const serviceSpy = jest
+				.spyOn(service, 'create')
+				.mockResolvedValue(SingleList);
+
+			expect(
+				service.create({ title: SingleList.title })
+			).resolves.toEqual(SingleList);
+			expect(serviceSpy).toBeCalledWith({ title: SingleList.title });
 		});
 	});
 });

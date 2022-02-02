@@ -1,9 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 
-import { ListsModule } from '../lists.module';
+import { AppModule } from '../app/app.module';
 
 const gql = '/graphql';
 
@@ -14,13 +13,7 @@ describe('GraphQL ListsResolver (e2e)', () => {
 
 	beforeAll(async () => {
 		const moduleRef = await Test.createTestingModule({
-			imports: [
-				ListsModule,
-
-				GraphQLModule.forRoot({
-					autoSchemaFile: true,
-				}),
-			],
+			imports: [AppModule],
 		}).compile();
 
 		app = moduleRef.createNestApplication();
@@ -32,7 +25,7 @@ describe('GraphQL ListsResolver (e2e)', () => {
 		await app.close();
 	});
 
-	describe(gql, () => {
+	describe('Lists Module', () => {
 		describe('lists', () => {
 			it('should get the lists array', () => {
 				return request(app.getHttpServer())
