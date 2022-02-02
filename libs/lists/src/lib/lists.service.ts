@@ -31,4 +31,12 @@ export class ListsService {
 			throw new BadRequestException(err);
 		}
 	}
+
+	async deleteOne(id: number) {
+		const list = await this.findOne(id);
+
+		await this.listRepository.removeAndFlush(list);
+
+		return true;
+	}
 }

@@ -79,4 +79,15 @@ describe('ListsService', () => {
 			expect(serviceSpy).toBeCalledWith({ title: SingleList.title });
 		});
 	});
+
+	describe('delete a list', () => {
+		it('should delete a list by id', () => {
+			const serviceSpy = jest
+				.spyOn(service, 'deleteOne')
+				.mockResolvedValue(true);
+
+			expect(service.deleteOne(1)).resolves.toEqual(true);
+			expect(serviceSpy).toBeCalledTimes(1);
+		});
+	});
 });

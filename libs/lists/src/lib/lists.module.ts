@@ -9,5 +9,6 @@ import { List } from './entities/list.entity';
 @Module({
 	imports: [MikroOrmModule.forFeature([List])],
 	providers: [ListsResolver, ListsService],
+	exports: [ListsService],
 })
 export class ListsModule {}
