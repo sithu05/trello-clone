@@ -1,4 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { List } from '../entities/list.entity';
+
 import { ListRepository } from '../repositories/list.repository';
 import { TaskRepository } from '../repositories/task.repository';
 import { TasksService } from '../tasks.service';
@@ -7,6 +10,7 @@ describe('Tasks Service', () => {
 	let service: TasksService;
 
 	const mockTaskRepository = {
+		find: jest.fn().mockResolvedValue([]),
 		findAll: jest.fn().mockResolvedValue([]),
 		findOneOrFail: jest.fn().mockImplementation((id) =>
 			Promise.resolve({
@@ -47,6 +51,10 @@ describe('Tasks Service', () => {
 
 	it('should get array of tasks', async () => {
 		await expect(service.findAll()).resolves.toEqual([]);
+	});
+
+	it('should get tasks of list', async () => {
+		await expect(service.findAllByList(new List())).resolves.toEqual([]);
 	});
 
 	it('should create a task', async () => {

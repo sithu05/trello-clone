@@ -1,8 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
 import { CreateListInput } from '../dto/create-list.input';
+
 import { List } from '../entities/list.entity';
+
 import { ListsResolver } from '../lists.resolver';
+
 import { ListsService } from '../lists.service';
+import { TasksService } from '../tasks.service';
 
 const Lists = [new List('List One'), new List('List Two')];
 const SingleList = new List('Single List');
@@ -10,24 +15,27 @@ const SingleList = new List('Single List');
 describe('ListsResolver', () => {
 	let resolver: ListsResolver;
 
+	const mockListsService = {
+		findAll: jest.fn().mockResolvedValue(Lists),
+		findOne: jest.fn().mockResolvedValue(SingleList),
+		create: jest
+			.fn()
+			.mockImplementation((input: CreateListInput) =>
+				Promise.resolve(new List(input.title))
+			),
+	};
+
+	const mockTasksService = {};
+
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
-			providers: [
-				ListsResolver,
-				{
-					provide: ListsService,
-					useValue: {
-						findAll: jest.fn().mockResolvedValue(Lists),
-						findOne: jest.fn().mockResolvedValue(SingleList),
-						create: jest
-							.fn()
-							.mockImplementation((input: CreateListInput) =>
-								Promise.resolve(new List(input.title))
-							),
-					},
-				},
-			],
-		}).compile();
+			providers: [ListsResolver, ListsService, TasksService],
+		})
+			.overrideProvider(ListsService)
+			.useValue(mockListsService)
+			.overrideProvider(TasksService)
+			.useValue(mockTasksService)
+			.compile();
 
 		resolver = module.get<ListsResolver>(ListsResolver);
 	});

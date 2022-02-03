@@ -4,6 +4,7 @@ import { CreateTaskInput } from './dto/create-task.input';
 import { UpdatePositionTaskInput } from './dto/update-position-task.input';
 import { UpdateTaskInput } from './dto/update-task.input';
 
+import { List } from './entities/list.entity';
 import { Task } from './entities/task.entity';
 
 import { ListRepository } from './repositories/list.repository';
@@ -67,5 +68,9 @@ export class TasksService {
 
 	findAll() {
 		return this.taskRepository.findAll();
+	}
+
+	findAllByList(list: List) {
+		return this.taskRepository.find({ list });
 	}
 }
