@@ -1,6 +1,6 @@
+import { MikroORM } from '@mikro-orm/core';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { ListsService, TasksService } from '@trello-clone/lists';
 import * as request from 'supertest';
 
 import { AppModule } from '../app/app.module';
@@ -9,8 +9,7 @@ const gql = '/graphql';
 
 describe('GraphQL ListsResolver (e2e)', () => {
 	let app: INestApplication;
-	let listsService: ListsService;
-	let tasksService: TasksService;
+	let orm: MikroORM;
 
 	beforeAll(async () => {
 		const moduleRef = await Test.createTestingModule({
@@ -18,8 +17,7 @@ describe('GraphQL ListsResolver (e2e)', () => {
 		}).compile();
 
 		app = moduleRef.createNestApplication();
-		listsService = moduleRef.get<ListsService>(ListsService);
-		tasksService = moduleRef.get<TasksService>(TasksService);
+		orm = moduleRef.get<MikroORM>(MikroORM);
 
 		await app.init();
 	});
@@ -31,16 +29,10 @@ describe('GraphQL ListsResolver (e2e)', () => {
 	describe('Lists Module', () => {
 		// clear the data before tests
 		beforeEach(async () => {
-			const lists = await request(app.getHttpServer())
-				.post(gql)
-				.send({ query: '{ lists { id title }}' })
-				.expect(200);
+			const generator = orm.getSchemaGenerator();
 
-			await Promise.all(
-				lists.body.data.lists.map(async (list) => {
-					return await listsService.deleteOne(list.id);
-				})
-			);
+			await generator.dropSchema();
+			await generator.createSchema();
 		});
 
 		it('create list, get all lists, get by id', async () => {
@@ -102,60 +94,115 @@ describe('GraphQL ListsResolver (e2e)', () => {
 		});
 	});
 
-	// describe('Tasks Module', () => {
-	// 	// clear the data before tests
-	// 	beforeEach(async () => {
-	// 		const tasks = await request(app.getHttpServer())
-	// 			.post(gql)
-	// 			.send({ query: '{ tasks { id }}' })
-	// 			.expect(200);
+	describe('Tasks Module', () => {
+		// clear the data before tests
+		beforeEach(async () => {
+			const generator = orm.getSchemaGenerator();
 
-	// 		await Promise.all(
-	// 			tasks.body.data.tasks.map(async (task) => {
-	// 				return await tasksService.deleteOne(task.id);
-	// 			})
-	// 		);
-	// 	});
+			await generator.dropSchema();
+			await generator.createSchema();
+		});
 
-	// 	it('create a list, create tasks with list, get tasks, get task, lists with tasks', async () => {
-	// 		let createdList;
+		it('create a list, create tasks with list, get tasks, get task, lists with tasks', async () => {
+			let createdList;
 
-	// 		await request(app.getHttpServer())
-	// 			.post(gql)
-	// 			.send({
-	// 				query: `mutation {
-	// 						createList(createListInput: { title: "List One" }) {
-	// 							id
-	// 							title
-	// 						}
-	// 					}`,
-	// 			})
-	// 			.expect(200)
-	// 			.expect((res) => {
-	// 				createdList = res.body.data.createList;
-	// 			});
+			await request(app.getHttpServer())
+				.post(gql)
+				.send({
+					query: `mutation {
+							createList(createListInput: { title: "List One" }) {
+								id
+								title
+							}
+						}`,
+				})
+				.expect(200)
+				.expect((res) => {
+					createdList = res.body.data.createList;
+				});
 
-	// 		const created = await request(app.getHttpServer())
-	// 			.post(gql)
-	// 			.send({
-	// 				query: `mutation {
-	// 						createTask(createTaskInput: { title: "New Task", list: ${createdList.id} }) {
-	// 							id
-	// 							title
-	// 							list {
-	// 								id
-	// 								title
-	// 							}
-	// 						}
-	// 					}`,
-	// 			})
-	// 			.expect(200);
+			// ----------------- Create List --------------------------
 
-	// 		expect(created.body.data.createTask).toEqual({
-	// 			title: 'New Task',
-	// 			id: expect.any(Number),
-	// 			list: createdList,
-	// 		});
-	// 	});
-	// });
+			const created = await request(app.getHttpServer())
+				.post(gql)
+				.send({
+					query: `mutation {
+							createTask(createTaskInput: { title: "New Task", list: ${createdList.id} }) {
+								id
+								title
+								list {
+									id
+									title
+								}
+							}
+						}`,
+				})
+				.expect(200);
+
+			expect(created.body.data.createTask).toEqual({
+				title: 'New Task',
+				id: expect.any(Number),
+				list: createdList,
+			});
+
+			// ----------------- Create Task --------------------------
+
+			const updated = await request(app.getHttpServer())
+				.post(gql)
+				.send({
+					query: `mutation {
+							updateTask(id: ${created.body.data.createTask.id}, updateTaskInput: { title: "Updated Task", isCompleted: true }) {
+								id
+								title
+								isCompleted
+							}
+						}`,
+				})
+				.expect(200);
+
+			expect(updated.body.data.updateTask).toEqual({
+				id: created.body.data.createTask.id,
+				title: 'Updated Task',
+				isCompleted: true,
+			});
+
+			// ----------------- Update Task --------------------------
+
+			const updatedPosition = await request(app.getHttpServer())
+				.post(gql)
+				.send({
+					query: `mutation {
+							updateTaskPosition(id: ${created.body.data.createTask.id}, updatePositionTaskInput: { position: 400 }) {
+								id
+								sortBy
+							}
+						}`,
+				})
+				.expect(200);
+
+			expect(updatedPosition.body.data.updateTaskPosition).toEqual({
+				id: created.body.data.createTask.id,
+				sortBy: 400,
+			});
+
+			// ----------------- Update Task Position --------------------------
+
+			const lists = await request(app.getHttpServer())
+				.post(gql)
+				.send({ query: '{ lists { id title tasks { id } }}' })
+				.expect(200);
+
+			expect(lists.body.data.lists).toEqual(expect.any(Array));
+			expect(lists.body.data.lists.length).toBe(1);
+
+			expect(lists.body.data.lists[0].tasks).toEqual(expect.any(Array));
+			expect(lists.body.data.lists[0].tasks.length).toBe(1);
+
+			expect(lists.body.data.lists[0]).toEqual({
+				id: createdList.id,
+				title: createdList.title,
+				tasks: [{ id: created.body.data.createTask.id }],
+			});
+		});
+	});
 });
