@@ -23,6 +23,7 @@ describe('Tasks Service', () => {
 		persistAndFlush: jest
 			.fn()
 			.mockImplementation((payload) => Promise.resolve({ ...payload })),
+		removeAndFlush: jest.fn().mockImplementation(() => Promise.resolve()),
 	};
 
 	const mockListRepository = {
@@ -90,5 +91,9 @@ describe('Tasks Service', () => {
 			isCompleted: expect.any(Boolean),
 			sortBy: 100,
 		});
+	});
+
+	it('should delete a task by id', async () => {
+		await expect(service.deleteOne(1)).resolves.toEqual(true);
 	});
 });

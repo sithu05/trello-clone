@@ -73,4 +73,12 @@ export class TasksService {
 	findAllByList(list: List) {
 		return this.taskRepository.find({ list });
 	}
+
+	async deleteOne(id: number) {
+		const list = await this.taskRepository.findOneOrFail(id);
+
+		await this.taskRepository.removeAndFlush(list);
+
+		return true;
+	}
 }
