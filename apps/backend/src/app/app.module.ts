@@ -16,7 +16,7 @@ import { AppService } from './app.service';
 			debug: false,
 			autoLoadEntities: true,
 			user: 'root',
-			password: 'mypassword',
+			password: 'root',
 		}),
 
 		ListsModule,
