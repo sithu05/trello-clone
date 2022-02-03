@@ -7,9 +7,12 @@ import { ListsResolver } from './lists.resolver';
 import { List } from './entities/list.entity';
 import { Task } from './entities/task.entity';
 
+import { TasksService } from './tasks.service';
+import { TasksResolver } from './tasks.resolver';
+
 @Module({
 	imports: [MikroOrmModule.forFeature([List, Task])],
-	providers: [ListsResolver, ListsService],
+	providers: [ListsResolver, ListsService, TasksService, TasksResolver],
 	exports: [ListsService],
 })
 export class ListsModule {}

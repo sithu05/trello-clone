@@ -1,10 +1,19 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+	Entity,
+	EntityRepositoryType,
+	ManyToOne,
+	PrimaryKey,
+	Property,
+} from '@mikro-orm/core';
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { TaskRepository } from '../repositories/task.repository';
 import { List } from './list.entity';
 
-@Entity()
 @ObjectType()
+@Entity({ customRepository: () => TaskRepository })
 export class Task {
+	[EntityRepositoryType]?: TaskRepository;
+
 	@PrimaryKey()
 	@Field(() => Int)
 	id: number;
@@ -13,13 +22,13 @@ export class Task {
 	@Property()
 	title: string;
 
-	@Field()
-	@Property()
+	@Property({ columnType: 'Boolean' })
+	@Field(() => Boolean)
 	isCompleted = false;
 
-	@Property()
+	@Property({ columnType: 'INT' })
 	@Field(() => Int)
-	sortBy: number;
+	sortBy = 0;
 
 	@ManyToOne(() => List)
 	@Field(() => List)
