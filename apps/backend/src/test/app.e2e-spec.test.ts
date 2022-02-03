@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { ListsService } from '@trello-clone/lists';
+import { ListsService, TasksService } from '@trello-clone/lists';
 import * as request from 'supertest';
 
 import { AppModule } from '../app/app.module';
@@ -10,6 +10,7 @@ const gql = '/graphql';
 describe('GraphQL ListsResolver (e2e)', () => {
 	let app: INestApplication;
 	let listsService: ListsService;
+	let tasksService: TasksService;
 
 	beforeAll(async () => {
 		const moduleRef = await Test.createTestingModule({
@@ -18,6 +19,7 @@ describe('GraphQL ListsResolver (e2e)', () => {
 
 		app = moduleRef.createNestApplication();
 		listsService = moduleRef.get<ListsService>(ListsService);
+		tasksService = moduleRef.get<TasksService>(TasksService);
 
 		await app.init();
 	});
@@ -36,7 +38,7 @@ describe('GraphQL ListsResolver (e2e)', () => {
 
 			await Promise.all(
 				lists.body.data.lists.map(async (list) => {
-					return listsService.deleteOne(list.id);
+					return await listsService.deleteOne(list.id);
 				})
 			);
 		});
@@ -99,4 +101,61 @@ describe('GraphQL ListsResolver (e2e)', () => {
 			// ------------------ Get List By ID ------------------------
 		});
 	});
+
+	// describe('Tasks Module', () => {
+	// 	// clear the data before tests
+	// 	beforeEach(async () => {
+	// 		const tasks = await request(app.getHttpServer())
+	// 			.post(gql)
+	// 			.send({ query: '{ tasks { id }}' })
+	// 			.expect(200);
+
+	// 		await Promise.all(
+	// 			tasks.body.data.tasks.map(async (task) => {
+	// 				return await tasksService.deleteOne(task.id);
+	// 			})
+	// 		);
+	// 	});
+
+	// 	it('create a list, create tasks with list, get tasks, get task, lists with tasks', async () => {
+	// 		let createdList;
+
+	// 		await request(app.getHttpServer())
+	// 			.post(gql)
+	// 			.send({
+	// 				query: `mutation {
+	// 						createList(createListInput: { title: "List One" }) {
+	// 							id
+	// 							title
+	// 						}
+	// 					}`,
+	// 			})
+	// 			.expect(200)
+	// 			.expect((res) => {
+	// 				createdList = res.body.data.createList;
+	// 			});
+
+	// 		const created = await request(app.getHttpServer())
+	// 			.post(gql)
+	// 			.send({
+	// 				query: `mutation {
+	// 						createTask(createTaskInput: { title: "New Task", list: ${createdList.id} }) {
+	// 							id
+	// 							title
+	// 							list {
+	// 								id
+	// 								title
+	// 							}
+	// 						}
+	// 					}`,
+	// 			})
+	// 			.expect(200);
+
+	// 		expect(created.body.data.createTask).toEqual({
+	// 			title: 'New Task',
+	// 			id: expect.any(Number),
+	// 			list: createdList,
+	// 		});
+	// 	});
+	// });
 });

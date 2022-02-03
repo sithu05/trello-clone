@@ -1,3 +1,5 @@
+import { MikroORM } from '@mikro-orm/core';
+import { UseRequestContext } from '@mikro-orm/nestjs';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateListInput } from './dto/create-list.input';
 
@@ -7,7 +9,10 @@ import { ListRepository } from './repositories/list.repository';
 
 @Injectable()
 export class ListsService {
-	constructor(private readonly listRepository: ListRepository) {}
+	constructor(
+		private readonly orm: MikroORM,
+		private readonly listRepository: ListRepository
+	) {}
 
 	async create(createListInput: CreateListInput) {
 		const list = new List(createListInput.title);
@@ -29,6 +34,7 @@ export class ListsService {
 		}
 	}
 
+	@UseRequestContext()
 	async deleteOne(id: number) {
 		const list = await this.findOne(id);
 

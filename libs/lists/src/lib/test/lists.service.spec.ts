@@ -1,4 +1,4 @@
-import { EntityRepository, NotFoundError } from '@mikro-orm/core';
+import { EntityRepository, MikroORM, NotFoundError } from '@mikro-orm/core';
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -23,6 +23,10 @@ describe('ListsService', () => {
 						findAll: jest.fn().mockResolvedValue(Lists),
 						findOneOrFail: jest.fn().mockResolvedValue(SingleList),
 					},
+				},
+				{
+					provide: MikroORM,
+					useValue: {},
 				},
 			],
 		}).compile();
