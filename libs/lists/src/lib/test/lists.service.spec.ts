@@ -1,10 +1,10 @@
 import { EntityRepository, NotFoundError } from '@mikro-orm/core';
-import { getRepositoryToken } from '@mikro-orm/nestjs';
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { List } from './entities/list.entity';
-import { ListsService } from './lists.service';
+import { List } from '../entities/list.entity';
+import { ListsService } from '../lists.service';
+import { ListRepository } from '../repositories/list.repository';
 
 const Lists = [new List('List One'), new List('List Two')];
 const SingleList = new List('List Detail');
@@ -18,7 +18,7 @@ describe('ListsService', () => {
 			providers: [
 				ListsService,
 				{
-					provide: getRepositoryToken(List),
+					provide: ListRepository,
 					useValue: {
 						findAll: jest.fn().mockResolvedValue(Lists),
 						findOneOrFail: jest.fn().mockResolvedValue(SingleList),
@@ -28,7 +28,7 @@ describe('ListsService', () => {
 		}).compile();
 
 		service = module.get<ListsService>(ListsService);
-		repo = module.get<EntityRepository<List>>(getRepositoryToken(List));
+		repo = module.get<ListRepository>(ListRepository);
 	});
 
 	it('should be defined', () => {

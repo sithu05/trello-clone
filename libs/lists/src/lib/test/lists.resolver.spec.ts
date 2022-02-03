@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CreateListInput } from './dto/create-list.input';
-import { List } from './entities/list.entity';
-import { ListsResolver } from './lists.resolver';
-import { ListsService } from './lists.service';
+import { CreateListInput } from '../dto/create-list.input';
+import { List } from '../entities/list.entity';
+import { ListsResolver } from '../lists.resolver';
+import { ListsService } from '../lists.service';
 
 const Lists = [new List('List One'), new List('List Two')];
 const SingleList = new List('Single List');

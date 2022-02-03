@@ -1,16 +1,20 @@
 import {
 	Collection,
 	Entity,
+	EntityRepositoryType,
 	OneToMany,
 	PrimaryKey,
 	Property,
 } from '@mikro-orm/core';
 import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { ListRepository } from '../repositories/list.repository';
 import { Task } from './task.entity';
 
-@Entity()
 @ObjectType()
+@Entity({ customRepository: () => ListRepository })
 export class List {
+	[EntityRepositoryType]?: ListRepository;
+
 	@PrimaryKey()
 	@Field(() => Int)
 	id: number;
