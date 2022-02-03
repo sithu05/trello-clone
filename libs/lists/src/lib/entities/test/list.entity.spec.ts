@@ -1,4 +1,4 @@
-import { List } from './list.entity';
+import { List } from '../list.entity';
 
 describe('List Class', () => {
 	it('should make a list with no fields', () => {
