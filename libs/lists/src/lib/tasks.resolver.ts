@@ -8,6 +8,7 @@ import {
 	Int,
 } from '@nestjs/graphql';
 import { CreateTaskInput } from './dto/create-task.input';
+import { UpdatePositionTaskInput } from './dto/update-position-task.input';
 import { UpdateTaskInput } from './dto/update-task.input';
 
 import { List } from './entities/list.entity';
@@ -39,6 +40,15 @@ export class TasksResolver {
 		@Args('updateTaskInput') updateTaskInput: UpdateTaskInput
 	) {
 		return this.tasksService.update(id, updateTaskInput);
+	}
+
+	@Mutation(() => Task)
+	updateTaskPosition(
+		@Args('id', { type: () => Int }) id: number,
+		@Args('updatePositionTaskInput')
+		updatePositionTaskInput: UpdatePositionTaskInput
+	) {
+		return this.tasksService.updatePosition(id, updatePositionTaskInput);
 	}
 
 	@ResolveField('list', () => List)

@@ -6,7 +6,9 @@ import { TasksResolver } from '../tasks.resolver';
 
 import { ListsService } from '../lists.service';
 import { TasksService } from '../tasks.service';
+
 import { UpdateTaskInput } from '../dto/update-task.input';
+import { UpdatePositionTaskInput } from '../dto/update-position-task.input';
 
 describe('Tasks Resolver', () => {
 	let resolver: TasksResolver;
@@ -20,6 +22,11 @@ describe('Tasks Resolver', () => {
 					id,
 					...input,
 				})
+			),
+		updatePosition: jest
+			.fn()
+			.mockImplementation((id: number, input: UpdatePositionTaskInput) =>
+				Promise.resolve({ id, sortBy: input.position })
 			),
 		create: jest.fn().mockImplementation((input: CreateTaskInput) =>
 			Promise.resolve({
@@ -39,23 +46,7 @@ describe('Tasks Resolver', () => {
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
-			providers: [
-				TasksResolver,
-				TasksService,
-				ListsService,
-				// {
-				// 	provide: ListsService,
-				// 	useValue: {
-				// 		findAll: jest.fn().mockResolvedValue(Lists),
-				// 		findOne: jest.fn().mockResolvedValue(SingleList),
-				// 		create: jest
-				// 			.fn()
-				// 			.mockImplementation((input: CreateListInput) =>
-				// 				Promise.resolve(new List(input.title))
-				// 			),
-				// 	},
-				// },
-			],
+			providers: [TasksResolver, TasksService, ListsService],
 		})
 			.overrideProvider(TasksService)
 			.useValue(mockTasksService)
@@ -114,6 +105,12 @@ describe('Tasks Resolver', () => {
 				title: 'Updated Task',
 				isCompleted: true,
 			});
+		});
+
+		it('should update task position', async () => {
+			await expect(
+				resolver.updateTaskPosition(5, { position: 400 })
+			).resolves.toEqual({ id: 5, sortBy: 400 });
 		});
 	});
 });
